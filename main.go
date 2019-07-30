@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"bufio"
 
-	"github.com/azillion/edgcm-converter/internal/pkg/sotelib"
+	"github.com/azillion/edgcm-converter/climate"
+	"github.com/azillion/edgcm-converter/externalinputservice"
 )
 
+
+
 func main() {
+	exInputService := NewExternalInputService()
 	f, err := os.Open("./input-data/sote.dat")
 	if err != nil {
 		os.Exit(-1)
