@@ -48,12 +48,12 @@ func (f *SotECSVReader) Read() (*climate.WorldClimate, error) {
 
 func parseCSVLine(line []string, lineNumber int32) climate.Climate {
 	c := climate.Climate{
-		Latitude:        parseCSVFloat(line[0], lineNumber, 0),
-		WaterPercentage: parseCSVFloat(line[1], lineNumber, 1),
-		Elevation:       parseCSVFloat(line[2], lineNumber, 2),
-		Temperature:     parseCSVFloat(line[3], lineNumber, 3),
-		Humidity:        parseCSVFloat(line[4], lineNumber, 4),
-		Rainfall:        parseCSVFloat(line[5], lineNumber, 5),
+		Latitude:           parseCSVFloat(line[0], lineNumber, 0),
+		WaterPercentage:    parseCSVFloat(line[1], lineNumber, 1),
+		Elevation:          parseCSVFloat(line[2], lineNumber, 2),
+		Temperature:        parseCSVFloat(line[3], lineNumber, 3),
+		HumidityPercentage: parseCSVFloat(line[4], lineNumber, 4),
+		Rainfall:           parseCSVFloat(line[5], lineNumber, 5),
 	}
 	return c
 }
