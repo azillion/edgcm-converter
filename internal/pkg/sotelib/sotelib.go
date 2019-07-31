@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"math"
 
 	"github.com/azillion/edgcm-converter/climate"
 )
@@ -43,4 +44,8 @@ func NewSotEFile(f *os.File) (*SotEFile, error) {
 	}
 
 	return &soteFile, nil
+}
+
+func lengthToGridSize(l int32) float32 {
+	return float32(math.Sqrt(float64(l)))
 }

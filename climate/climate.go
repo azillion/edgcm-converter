@@ -18,7 +18,7 @@ type Climate struct {
 	Latitude        float32
 	WaterPercentage float32
 	Elevation       float32
-	Tempature       float32
+	Temperature     float32
 	Humidity        float32
 	Rainfall        float32
 }

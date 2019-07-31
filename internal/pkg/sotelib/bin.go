@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"math"
 	"os"
 
 	"github.com/azillion/edgcm-converter/climate"
@@ -14,6 +13,12 @@ import (
 // SotEBINReader SotEBINReader
 type SotEBINReader struct {
 	file *os.File
+}
+
+// NewSotEBINReader NewSotEBINReader
+func NewSotEBINReader(f *SotEFile) *SotEBINReader {
+	binFile := SotEBINReader{file: f.File}
+	return &binFile
 }
 
 // ClimateReader read a SotE Bin file
@@ -37,7 +42,7 @@ func (f *SotEBINReader) Read() (*climate.WorldClimate, error) {
 	wc.Length = numOfCells
 
 	// grid size is the square root of length
-	wc.GridSize = float32(math.Sqrt(float64(wc.Length)))
+	wc.GridSize = lengthToGridSize(wc.Length)
 	log.Debugf("File Cell Length: %+v\n", wc.Length)
 	log.Debugf("File GridSize: %+v\n", wc.GridSize)
 
@@ -63,12 +68,6 @@ func (f *SotEBINReader) Read() (*climate.WorldClimate, error) {
 	}
 
 	return wc, nil
-}
-
-// NewSotEBINReader NewSotEBINReader
-func NewSotEBINReader(f *SotEFile) *SotEBINReader {
-	binFile := SotEBINReader{file: f.File}
-	return &binFile
 }
 
 func readNextBytes(b *bufio.Reader, number int) ([]byte, error) {

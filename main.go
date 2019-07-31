@@ -18,7 +18,7 @@ var (
 
 func init() {
 	flag.BoolVar(&debug, "d", false, "debug mode")
-	flag.StringVar(&filePath, "f", "./input-data/sote.dat", "input data file path")
+	flag.StringVar(&filePath, "f", "./input-data/sote.csv", "input data file path")
 }
 
 func main() {
