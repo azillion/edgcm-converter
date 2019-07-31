@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/azillion/edgcm-converter/climate"
+
 	"github.com/azillion/edgcm-converter/internal/pkg/sotelib"
 
 	log "github.com/sirupsen/logrus"
@@ -29,9 +31,15 @@ func main() {
 		log.Debug("Debug Mode Enabled")
 	}
 
-	f, err := os.Open(filePath)
+	worldClimate := parseClimateFile(filePath)
+
+	exportClimateData(worldClimate, "./sote.out")
+}
+
+func parseClimateFile(path string) *climate.WorldClimate {
+	f, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("Failed to open the input file: %s", filePath)
+		log.Fatalf("Failed to open the input file: %s", path)
 	}
 	defer f.Close()
 
@@ -46,8 +54,11 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Infof("Number of Parsed Cells: %d", len(worldClimate.Cells))
+	return worldClimate
+}
 
-	f2, err := os.OpenFile("./input-data/sote.out", os.O_CREATE|os.O_WRONLY, 0644)
+func exportClimateData(wc *climate.WorldClimate, path string) {
+	f2, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,14 +66,19 @@ func main() {
 
 	datawriter := bufio.NewWriter(f2)
 
-	s1 := fmt.Sprintf("World Climate\nLength: %+v\n", worldClimate.Length)
+	s1 := fmt.Sprintf("World Climate\nLength: %+v\n", wc.Length)
 	_, _ = datawriter.WriteString(s1)
-	s2 := fmt.Sprintf("GridSize: %+v\n", worldClimate.GridSize)
+	s2 := fmt.Sprintf("GridSize: %+v\n", wc.GridSize)
 	_, _ = datawriter.WriteString(s2)
-	for _, cell := range worldClimate.Cells {
+	for _, cell := range wc.Cells {
 		s := fmt.Sprintf("Cell[%d]:%+v\n", cell.CellID, cell.Climate)
 		_, _ = datawriter.WriteString(s)
 	}
 
 	datawriter.Flush()
+	fstat, err := f2.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Debugf("Exported Climate Data: %s", fstat.Name())
 }
