@@ -1,53 +1,46 @@
 package sotelib
 
 import (
-    "bufio"
-    "math"
-    "fmt"
-    "bytes"
-    "encoding/binary"
-    "os"
-    "strings"
-	
-	"github.com/azillion/edgcm-converter/internal/pkg/sotelib"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/azillion/edgcm-converter/climate"
 )
 
+// FileReader FileReader
 type FileReader interface {
-    Read() *WorldClimate
+	Read() (*climate.WorldClimate, error)
 }
 
+// SotEFile SotEFile
 type SotEFile struct {
-    File *os.File
-    Reader FileReader
+	File   *os.File
+	Reader FileReader
 }
 
-func NewFileReader(f *os.File) FileReader {
-    fileInfo, err := f.Stat()
-    check(err)
+// NewSotEFile NewSotEFile
+func NewSotEFile(f *os.File) (*SotEFile, error) {
+	// TODO: Pass file path instead of file pointer
+	fileInfo, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
 
-    fileName := strings.ToLower(fileInfo.Name())
-    if (strings.HasSuffix(fileName, ".csv") == false && strings.HasSuffix(fileName, ".dat") == false && strings.HasSuffix(fileName, ".bin") == false) {
-        return nil
-    }
+	fileName := strings.ToLower(fileInfo.Name())
+	if strings.HasSuffix(fileName, ".csv") == false && strings.HasSuffix(fileName, ".dat") == false && strings.HasSuffix(fileName, ".bin") == false {
+		return nil, fmt.Errorf("%s is not a supported file type <.csv, .dat, .bin>", fileName)
+	}
 
-    if (strings.HasSuffix(fileName, ".csv") == true) {
-        reader := new(SotECSVFile)
-    }
-}
+	soteFile := SotEFile{File: f}
 
-// Reading files requires checking most calls for errors.
-// This helper will streamline our error checks below.
-func check(e error) {
-    if e != nil {
-        panic(e)
-    }
-}
+	if strings.HasSuffix(fileName, ".csv") == true {
+		reader := NewSotECSVReader(&soteFile)
+		soteFile.Reader = FileReader(reader)
+	} else {
+		reader := NewSotEBINReader(&soteFile)
+		soteFile.Reader = FileReader(reader)
+	}
 
-func readNextBytes(b *bufio.Reader, number int) []byte {
-	bytes := make([]byte, number)
-
-	_, err := b.Read(bytes)
-	check(err)
-
-	return bytes
+	return &soteFile, nil
 }

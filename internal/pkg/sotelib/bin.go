@@ -1,38 +1,83 @@
 package sotelib
 
+import (
+	"bufio"
+	"bytes"
+	"encoding/binary"
+	"math"
+	"os"
 
+	"github.com/azillion/edgcm-converter/climate"
+	log "github.com/sirupsen/logrus"
+)
 
-// ClimateReader read a SotE Bin file
-func (f *SotEBinFile) Read() {
-    reader := bufio.NewReader(f.sotEFile.InputFile)
-
-    // num of rows in the file
-    var numOfCells int32
-    numOfCellsBytes := readNextBytes(reader, 4)
-    buffer := bytes.NewBuffer(numOfCellsBytes)
-
-    // convert buffer to int32
-    err := binary.Read(buffer, binary.LittleEndian, &numOfCells)
-    check(err)
-
-    f.sotEFile.WorldClimate.GridSize = math.Sqrt(float64(numOfCells))
-    f.sotEFile.WorldClimate.Length = numOfCells
-    fmt.Printf("len: %d\ngridsize: %f\n", f.sotEFile.WorldClimate.Length, f.sotEFile.WorldClimate.GridSize)
-
-    f.sotEFile.WorldClimate.Cells = []*Cell{}
-    for i := 0; i < int(c.Length); i++ {
-        cell := new(Cell)
-        data := readNextBytes(reader, 24)
-        buffer2 := bytes.NewBuffer(data)
-        err := binary.Read(buffer2, binary.LittleEndian, cell)
-        check(err)
-		// fmt.Printf("cell:%+v\n", cell)
-		cell.CellId = i
-        f.sotEFile.WorldClimate.Cells = append(f.sotEFile.WorldClimate.Cells, cell)
-    }
+// SotEBINReader SotEBINReader
+type SotEBINReader struct {
+	file *os.File
 }
 
-func SotEBinFile(f *os.File) *SotEBinFile {
-	soteFile := SotEBinFile{File: f}
-	return &soteFile
+// ClimateReader read a SotE Bin file
+func (f *SotEBINReader) Read() (*climate.WorldClimate, error) {
+	wc := new(climate.WorldClimate)
+	reader := bufio.NewReader(f.file)
+
+	// num of rows in the file
+	var numOfCells int32
+	numOfCellsBytes, err := readNextBytes(reader, 4)
+	if err != nil {
+		return nil, err
+	}
+	buffer := bytes.NewBuffer(numOfCellsBytes)
+
+	// convert buffer to int32
+	err = binary.Read(buffer, binary.LittleEndian, &numOfCells)
+	if err != nil {
+		return nil, err
+	}
+	wc.Length = numOfCells
+
+	// grid size is the square root of length
+	wc.GridSize = float32(math.Sqrt(float64(wc.Length)))
+	log.Debugf("File Cell Length: %+v\n", wc.Length)
+	log.Debugf("File GridSize: %+v\n", wc.GridSize)
+
+	for i := 0; i < int(wc.Length); i++ {
+		climateInCell := new(climate.Climate)
+
+		data, err := readNextBytes(reader, 24)
+		if err != nil {
+			return nil, err
+		}
+		buffer2 := bytes.NewBuffer(data)
+		err = binary.Read(buffer2, binary.LittleEndian, climateInCell)
+		if err != nil {
+			return nil, err
+		}
+
+		cell := climate.Cell{
+			CellID:  int32(i),
+			Climate: *climateInCell,
+		}
+		// log.Debugf("cell:%+v\n", cell) // debug line will print every cell
+		wc.Cells = append(wc.Cells, &cell)
+	}
+
+	return wc, nil
+}
+
+// NewSotEBINReader NewSotEBINReader
+func NewSotEBINReader(f *SotEFile) *SotEBINReader {
+	binFile := SotEBINReader{file: f.File}
+	return &binFile
+}
+
+func readNextBytes(b *bufio.Reader, number int) ([]byte, error) {
+	bytes := make([]byte, number)
+
+	_, err := b.Read(bytes)
+	if err != nil {
+		return bytes, err
+	}
+
+	return bytes, nil
 }

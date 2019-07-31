@@ -1,14 +1,24 @@
 package sotelib
 
-type SotECSVReader struct {}
+import (
+	"fmt"
+	"os"
+	// "encoding/csv"
 
-func (csv *SotECSVFile) Read() *WorldClimate {
-	return nil
+	"github.com/azillion/edgcm-converter/climate"
+)
+
+// SotECSVReader SotECSVReader
+type SotECSVReader struct {
+	file *os.File
 }
 
-func NewSotECSVFile(f *os.File) *SotECSVFile {
-	soteFile := SotECSVFile{
-		File: f
-	}
-	return &soteFile
+func (f *SotECSVReader) Read() (*climate.WorldClimate, error) {
+	return nil, fmt.Errorf("CSV is not implemented")
+}
+
+// NewSotECSVReader NewSotECSVReader
+func NewSotECSVReader(f *SotEFile) *SotECSVReader {
+	csvFile := SotECSVReader{file: f.File}
+	return &csvFile
 }

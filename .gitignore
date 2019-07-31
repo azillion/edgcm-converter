@@ -13,6 +13,8 @@
 
 *-format.txt
 *.dat
+*.bin
+*.csv
 .vs-code/
 edgcm-converter
 *.out
